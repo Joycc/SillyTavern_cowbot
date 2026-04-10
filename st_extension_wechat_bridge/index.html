@@ -1,0 +1,22 @@
+<div id="wechat_bridge_panel" class="wechat-bridge-panel">
+    <h3 class="wechat-bridge-title">WeChat Bridge</h3>
+
+    <div id="wechat_status_text" class="wechat-status">等待连接...</div>
+
+    <div class="wechat-qr-wrapper">
+        <img
+            id="wechat_qr_img"
+            alt="WeChat Login QR"
+            style="display:none; width:200px; height:200px;"
+        />
+    </div>
+
+    <div class="wechat-control-row">
+        <label for="wechat_character_select" class="wechat-label">绑定角色</label>
+        <select id="wechat_character_select"></select>
+    </div>
+
+    <div class="wechat-control-row">
+        <button id="wechat_connect_btn">获取登录二维码</button>
+    </div>
+</div>
