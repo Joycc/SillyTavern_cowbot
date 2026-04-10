@@ -5,18 +5,30 @@
     const ST_QUEUE_API = '/api/extensions/wechat_bridge/queue';
     const ST_SEND_TEXTAREA = '#send_textarea';
     const ST_SEND_BUTTON = '#send_but';
+    const EXTENSION_NAME = 'st_extension_wechat_bridge';
+    const EXTENSION_FOLDER_PATH = `scripts/extensions/third-party/${EXTENSION_NAME}`;
+    const EXTENSION_HTML_PATH = `/${EXTENSION_FOLDER_PATH}/index.html`;
 
-    const $statusText = $('#wechat_status_text');
-    const $qrImg = $('#wechat_qr_img');
-    const $characterSelect = $('#wechat_character_select');
-    const $connectBtn = $('#wechat_connect_btn');
+    let $statusText = null;
+    let $qrImg = null;
+    let $characterSelect = null;
+    let $connectBtn = null;
 
     let qrTimer = null;
     let queueTimer = null;
     let lastWechatUserId = null;
 
+    function cacheElements() {
+        $statusText = $('#wechat_status_text');
+        $qrImg = $('#wechat_qr_img');
+        $characterSelect = $('#wechat_character_select');
+        $connectBtn = $('#wechat_connect_btn');
+    }
+
     function setStatus(text) {
-        $statusText.text(text);
+        if ($statusText?.length) {
+            $statusText.text(text);
+        }
     }
 
     function getCharactersArray() {
@@ -187,11 +199,28 @@
         }
     }
 
-    function init() {
+    function initAfterHtmlLoaded() {
+        cacheElements();
         initCharacterSelect();
         bindEvents();
         setStatus('等待连接...');
     }
 
-    init();
+    async function appendSettingsHtml() {
+        if ($('#wechat_bridge_panel').length > 0) {
+            return;
+        }
+
+        const html = await $.get(EXTENSION_HTML_PATH);
+        $('#extensions_settings').append(html);
+    }
+
+    $(async () => {
+        try {
+            await appendSettingsHtml();
+            initAfterHtmlLoaded();
+        } catch (err) {
+            console.error('[wechat_bridge] 加载扩展设置页面失败', err);
+        }
+    });
 })();

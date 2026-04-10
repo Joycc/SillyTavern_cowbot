@@ -1,0 +1,8 @@
+{
+  "display_name": "微信桥接器 (WeChat Bridge)",
+  "author": "SillyTavern Explorer",
+  "version": "1.0.0",
+  "description": "原生对接微信 ClawBot 长连接通道，实现微信与酒馆角色的实时互通。",
+  "requirements": [],
+  "optional": false
+}
