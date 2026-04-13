@@ -4,7 +4,7 @@ Weixin long-poll engine (framework-independent).
 职责：
 - 处理二维码登录与 token 持久化
 - 轮询 getUpdates 接收消息
-- 将文本消息转发到 SillyTavern 扩展后端
+- 将文本消息存入本地消息队列供前端拉取 (已剥离对 ST 后端的直接依赖)
 - 提供 send_text 能力回发消息
 """
 
@@ -17,8 +17,6 @@ import threading
 import time
 from typing import Optional
 
-import requests
-
 from weixin.weixin_api import CDN_BASE_URL, DEFAULT_BASE_URL, WeixinApi
 from weixin.weixin_message import WeixinMessage
 
@@ -30,7 +28,6 @@ RETRY_DELAY = 2
 SESSION_EXPIRED_ERRCODE = -14
 QR_LOGIN_TIMEOUT_S = 480
 QR_MAX_REFRESHES = 10
-ST_RECEIVE_URL = "http://127.0.0.1:8000/api/extensions/wechat_bridge/receive"
 
 
 class WeixinEngine:
@@ -306,15 +303,22 @@ class WeixinEngine:
         if wx_msg.ctype != "TEXT" or not content:
             return
 
-        payload = {"user_id": from_user_id, "content": content}
-        try:
-            resp = requests.post(ST_RECEIVE_URL, json=payload, timeout=10)
-            if resp.status_code >= 400:
-                logger.error(
-                    f"[WeixinEngine] forward to ST failed status={resp.status_code}, body={resp.text[:200]}"
-                )
-        except Exception as e:
-            logger.error(f"[WeixinEngine] forward to ST exception: {e}")
+        # ==========================================
+        # 核心修改：不再发送 HTTP 请求，而是存入内存队列
+        # ==========================================
+        if hasattr(self, 'message_queue'):
+            print(f"\n{'='*40}")
+            print(f"📥 [微信底层] 收到新消息！")
+            print(f"   发送者: {from_user_id}")
+            print(f"   内  容: {content}")
+            print(f"{'='*40}\n")
+            
+            self.message_queue.append({
+                "user_id": str(from_user_id),
+                "content": str(content)
+            })
+        else:
+            logger.warning(f"⚠️ 收到微信消息，但 message_queue 未挂载，消息丢失: {content}")
 
     # ── send api ────────────────────────────────────────────────────────
 
